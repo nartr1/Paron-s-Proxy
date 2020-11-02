@@ -21,19 +21,21 @@ class ProxyRunner(Thread):
     def run(self):
         
         while True:
-            data = ""
             try:
-                if self.client and len(parser.CLIENT_QUEUE):
-                    while len(parselib.CLIENT_QUEUE):
-                        packet = parselib.CLIENT_QUEUE.pop()
-                        self.server.sendall(packet)
-                data = self.server.recvfrom(4096)
+                data = ""
+                try:
+                    if self.client and len(parser.CLIENT_QUEUE):
+                        while len(parselib.CLIENT_QUEUE):
+                            packet = parselib.CLIENT_QUEUE.pop()
+                            self.sender.sendall(packet)
+                    data = self.server.recvfrom(4096)
+                except Exception as ex:
+                    print(f"Packet send failed with {ex}")
+                try:
+                    if data:
+                        parselib.Parse(data, self.client)
+                except Exception as ex:
+                    print(f"Parser failed with {ex}")
+                importlib.reload(parselib)
             except Exception as ex:
-                print(f"Packet send failed with {ex}")
-            try:
-                if data:
-                    parselib.Parse(data, self.client)
-            except Exception as ex:
-                print(f"Parser failed with {ex}")
-            importlib.reload(parselib)
-                
+                print(f"General failure: {ex}")
